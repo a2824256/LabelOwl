@@ -1,6 +1,7 @@
 <template>
   <div class="canvas_div">
     <canvas id="label_canvas"></canvas>
+    <button @click="deleteLastPoint">删除上一个点</button>
   </div>
 </template>
 
@@ -13,6 +14,7 @@ export default {
   lastX: null,
   lastY: null,
   image: null,
+  drawingLines: [],
   name: 'LabelPage',
   startPoint: null,
   mounted () {
@@ -44,6 +46,9 @@ export default {
       this.lastX = this.x
       this.lastY = this.y
       console.log(this.x + ',' + this.y)
+      console.log(this.drawingLines)
+      // this.drawingLines.push([this.x, this.y])
+      console.log(this.drawingLines)
     },
     pictureDisplay () {
       this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height)
@@ -60,6 +65,11 @@ export default {
       this.ctx.strokeStyle = 'red'
       this.ctx.stroke()
       this.ctx.restore()
+    },
+    deleteLastPoint () {
+      if (this.drawingLines !== []) {
+        this.drawingLines.pop()
+      }
     }
   }
 }
