@@ -3,7 +3,26 @@
     <div class="canvas_div" id="canvas_div">
       <canvas id="label_canvas" class="canvas"></canvas>
     </div>
-    <button id="deleteLastPoint" @click="deleteLastPoint">删除上一个点</button>
+    <div id="contrl_panel">
+      <button id="delete_last_point" @click="deleteLastPoint">删除上一个点</button>
+      <button id="retype_label">确定label</button>
+    </div>
+    <div id="popup" :style="display">
+      <div id="popup_content">
+        <div>
+          <span id="select_label">选择label:</span>
+          <Select style="width:200px" v-model="formItem.labels">
+            <Option v-for="item in formItem.stateList" :value="item.value" :key="item.value" name="labels">{{
+              item.label }}
+            </Option>
+          </Select>
+        </div>
+        <span id="button_span">
+          <button id="confim_button" @click="cancelButtonClick">确认</button>
+          <button id="cancel_button" @click="cancelButtonClick">取消</button>
+        </span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -28,7 +47,24 @@ export default {
       canvasArea: null,
       labelCounter: 0,
       colors: ['red', 'blue', 'green', 'yellow'],
-      labelCompelete: false
+      labelCompelete: false,
+      display: 'display:none',
+      formItem: {
+        stateList: [
+          {
+            value: '0',
+            label: 'consil'
+          },
+          {
+            value: '1',
+            label: 'mouth'
+          },
+          {
+            value: '2',
+            label: 'pp-wall'
+          }
+        ]
+      }
     }
   },
   mounted () {
@@ -54,7 +90,7 @@ export default {
         if (evt.path[0].className !== 'canvas') return
         if (this.x < this.canvasArea.left || this.x > (this.canvasArea.left + this.canvasArea.width)) return
         if (this.y < this.canvasArea.top || this.y > (this.canvasArea.top + this.canvasArea.height)) return
-        if (Math.abs(this.x - this.startPoint[0]) <= 2 && Math.abs(this.y - this.startPoint[1]) <= 2 && this.drawingLines.length > 1) {
+        if (Math.abs(this.x - this.startPoint[0]) <= 5 && Math.abs(this.y - this.startPoint[1]) <= 5 && this.drawingLines.length > 1) {
           this.x = this.startPoint[0]
           this.y = this.startPoint[1]
           this.labelCompelete = true
@@ -81,6 +117,9 @@ export default {
         this.lastY = this.y
         this.drawingLines.push([this.x, this.y])
         this.count += 1
+        if (this.labelCompelete) {
+          this.display = ' '
+        }
       }
     },
     pictureDisplay () {
@@ -107,6 +146,7 @@ export default {
         delNode.remove()
         this.count -= 1
         this.labelCompelete = false
+        this.display = 'display:none'
         if (this.drawingLines.hasOwnProperty(this.count - 2)) {
           this.lastX = this.drawingLines[this.count - 2][0]
           this.lastY = this.drawingLines[this.count - 2][1]
@@ -115,6 +155,9 @@ export default {
           this.lastY = null
         }
       }
+    },
+    cancelButtonClick () {
+      this.display = 'display:none'
     }
   }
 }
@@ -127,9 +170,21 @@ export default {
   .canvas {
     position: absolute;
   }
-  #deleteLastPoint{
-    margin-top: 720px;
+  #delete_last_point{
+    margin-top: 750px;
+    height: 40px;
     /*padding-top: 800px;*/
+  }
+
+  #popup{
+    width: 30%;
+    height: 30%;
+    background: black;
+    position: absolute;
+    top:200px;
+    left:400px;
+    z-index: 999;
+    opacity:0.8;
   }
   canvas {
     position: absolute;
@@ -139,5 +194,32 @@ export default {
     left:0px;
     width: 1280px;
     height: 720px;
+  }
+  #select_label{
+    color: aliceblue;
+  }
+  #popup_content{
+    margin-top: 100px;
+    text-align: center;
+  }
+  #confim_button{
+    width: 100px;
+    height: 30px;
+    margin-top: 10px;
+  }
+  #retype_label{
+    margin-top: 750px;
+    height: 40px;
+  }
+  #cancel_button{
+    width: 100px;
+    height: 30px;
+    margin-left: 30px;
+    margin-top: 10px;
+  }
+  #contrl_panel{
+    background: black;
+    height: 1000px;
+    /*margin-top: 720px;*/
   }
 </style>
