@@ -11,17 +11,50 @@
       <div id="popup_content">
         <div>
           <span id="select_label">选择label:</span>
-          <Select style="width:200px" v-model="formItem.labels">
+          <Select style="width:200px" v-model="formItem.labels" @change="changeSelection">
             <Option v-for="item in formItem.stateList" :value="item.value" :key="item.value" name="labels">{{
               item.label }}
             </Option>
           </Select>
         </div>
         <span id="button_span">
-          <button id="confim_button" @click="cancelButtonClick">确认</button>
+          <button id="confim_button" @click="confimButtonClick">确认</button>
           <button id="cancel_button" @click="cancelButtonClick">取消</button>
         </span>
       </div>
+    </div>
+    <div id="label_box">
+      <div class="list-label">label列表</div>
+      <div>
+        <table id="label_table" class="list-table" cellspacing="0" cellpadding="1" border="1px">
+          <tr>
+            <td>label</td>
+            <td>分类</td>
+            <td>操作</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div id="classes_box">
+      <div class="list-label">分类列表</div>
+        <table id="classes_table" class="list-table" cellspacing="0" cellpadding="1" border="1px">
+          <tr>
+            <td>Label</td>
+            <td>颜色</td>
+          </tr>
+        </table>
+    </div>
+    <div id="files_box">
+      <div class="list-label">文件列表</div>
+      <table>
+        <table class="list-table" cellspacing="0" cellpadding="1" border="1px">
+          <tr>
+            <td>文件名</td>
+            <td>状态</td>
+            <td>标注者</td>
+          </tr>
+        </table>
+      </table>
     </div>
   </div>
 </template>
@@ -56,7 +89,7 @@ export default {
       drawSwitch: true,
       // canvas范围rect对象
       canvasArea: null,
-      colors: ['red', 'blue', 'green', 'yellow'],
+      colors: ['yellow', 'blue', 'green', 'black'],
       // 该label是否标注完成
       labelCompelete: false,
       // 弹出层默认css
@@ -76,7 +109,8 @@ export default {
             label: 'pp-wall'
           }
         ]
-      }
+      },
+      selectValue: 0
     }
   },
   // 页面加载逻辑
@@ -84,8 +118,46 @@ export default {
     this.initCanvas()
     window.addEventListener('click', this.mouseClick)
     this.canvasDiv = document.getElementById('canvas_div')
+    this.updateClassesList()
   },
   methods: {
+    // 选择分类下拉框选择事件
+    changeSelection (event) {
+      this.selectValue = event.target.value
+    },
+    // 更新分类列表
+    updateClassesList () {
+      let clt = document.getElementById('classes_table')
+      for (let i = 0; i < this.formItem.stateList.length; i++) {
+        let tr = document.createElement('tr')
+        let td1 = document.createElement('td')
+        td1.innerText = this.formItem.stateList[i]['label']
+        let td2 = document.createElement('td')
+        let div = document.createElement('div')
+        div.style = 'margin-left:50px;width:10px;height:10px;background:' + this.colors[i] + ';'
+        td2.appendChild(div)
+        tr.appendChild(td1)
+        tr.appendChild(td2)
+        clt.appendChild(tr)
+      }
+    },
+    // 更新label列表
+    updateLabelList (classId) {
+      let clt = document.getElementById('label_table')
+      let tr = document.createElement('tr')
+      let td1 = document.createElement('td')
+      td1.innerText = 'label_' + (this.labelCount + 1)
+      let td2 = document.createElement('td')
+      td2.innerText = this.formItem.stateList[this.selectValue]['label']
+      let td3 = document.createElement('td')
+      let but = document.createElement('button')
+      but.innerText = '删除'
+      td3.appendChild(but)
+      tr.appendChild(td1)
+      tr.appendChild(td2)
+      tr.appendChild(td3)
+      clt.appendChild(tr)
+    },
     // 界面初始化函数
     initCanvas () {
       this.canvas = document.getElementById('label_canvas')
@@ -94,33 +166,41 @@ export default {
       this.canvas.width = 1280
       this.canvas.height = 720
       this.image = new Image()
-      this.image.src = 'http://localhost:9090/static/223.jpg'
+      this.image.src = 'http://localhost:9090/static/images/223.jpg'
       this.image.onload = this.pictureDisplay
+    },
+    confimButtonClick () {
+      this.updateLabelList()
+      this.updateCanvasLayers(this.colors[this.selectValue])
+      this.display = 'display:none'
+      this.labelCompelete = false
+      this.lastX = null
+      this.lastY = null
     },
     // 鼠标点击canvas函数
     mouseClick (evt) {
       if (this.drawSwitch === true && this.labelCompelete === false) {
+        console.log('????')
         this.x = evt.offsetX
         this.y = evt.offsetY
-        if (evt.path[0].className !== 'canvas') return
-        if (this.x < this.canvasArea.left || this.x > (this.canvasArea.left + this.canvasArea.width)) return
-        if (this.y < this.canvasArea.top || this.y > (this.canvasArea.top + this.canvasArea.height)) return
+        if (evt.path[0].className !== 'canvas') {
+          return
+        }
+        if (this.x < this.canvasArea.left || this.x > (this.canvasArea.left + this.canvasArea.width)) {
+          return
+        }
+        if (this.y < this.canvasArea.top || this.y > (this.canvasArea.top + this.canvasArea.height)) {
+          return
+        }
         if (Math.abs(this.x - this.startPoint[0]) <= 5 && Math.abs(this.y - this.startPoint[1]) <= 5 && this.drawingLines.length > 1) {
           this.x = this.startPoint[0]
           this.y = this.startPoint[1]
           this.labelCompelete = true
         }
-        let newCanvas = document.createElement('canvas')
-        newCanvas.width = this.canvas.width
-        newCanvas.height = this.canvas.height
-        newCanvas.id = 'canvas' + this.count
-        newCanvas.className = 'canvas'
-        newCanvas.style = 'position: absolute;z-index:' + (this.count + 100) + ';'
-        this.canvasDiv.appendChild(newCanvas)
-        let ctx = newCanvas.getContext('2d')
-        this.drawPoint(ctx, this.x, this.y, 4)
+        let ctx = this.newCanvasLayer('canvas', 'canvas')
+        this.drawPoint(ctx, this.x, this.y, 4, 'red')
         if (this.lastX != null && this.lastY != null) {
-          this.drawLine(ctx, this.x, this.y, this.lastX, this.lastY)
+          this.drawLine(ctx, this.x, this.y, this.lastX, this.lastY, 'red')
         } else {
           this.startPoint = [this.x, this.y]
         }
@@ -130,9 +210,19 @@ export default {
         this.count += 1
         if (this.labelCompelete) {
           this.display = ' '
-          this.updateCanvasLayers()
         }
       }
+    },
+    // 创建新图层
+    newCanvasLayer (id, className) {
+      let newCanvas = document.createElement('canvas')
+      newCanvas.width = this.canvas.width
+      newCanvas.height = this.canvas.height
+      newCanvas.id = id + this.count
+      newCanvas.className = className
+      newCanvas.style = 'position: absolute;z-index:' + (this.count + 100) + ';'
+      this.canvasDiv.appendChild(newCanvas)
+      return newCanvas.getContext('2d')
     },
     // 图像加载完成回调函数
     pictureDisplay () {
@@ -140,7 +230,7 @@ export default {
       this.canvasArea = this.canvas.getBoundingClientRect()
     },
     // 画线事件
-    drawLine (ctx, x1, y1, x2, y2) {
+    drawLine (ctx, x1, y1, x2, y2, color) {
       ctx.save()
       ctx.beginPath()
       ctx.lineCap = 'round'
@@ -149,7 +239,7 @@ export default {
       ctx.moveTo(x1, y1)
       ctx.lineTo(x2, y2)
       ctx.closePath()
-      ctx.strokeStyle = 'red'
+      ctx.strokeStyle = color
       ctx.stroke()
       ctx.restore()
     },
@@ -176,20 +266,36 @@ export default {
       this.display = 'display:none'
     },
     // 画点函数
-    drawPoint (ctx, x, y, r) {
-      ctx.fillStyle = 'red'
+    drawPoint (ctx, x, y, r, color) {
+      ctx.fillStyle = color
       ctx.beginPath()
       ctx.arc(x, y, r, 0, Math.PI * 2)
       ctx.fill()
       ctx.closePath()
     },
-    // 标注点集合遍历函数
-    continueLinesIter (item, index) {
-      console.log(item + ',' + index)
-    },
     // 合并canvas图层函数
-    updateCanvasLayers () {
-      this.drawingLines.forEach(this.continueLinesIter)
+    updateCanvasLayers (color) {
+      this.labelCount += 1
+      // this.drawingLines.forEach(this.continueLinesIter)
+      let ctx = this.newCanvasLayer('label_' + this.labelCount, 'canvas')
+      for (let i = 0; i < this.drawingLines.length; i++) {
+        this.drawPoint(ctx, this.drawingLines[i][0], this.drawingLines[i][1], 4, color)
+        if (i !== 0) {
+          this.drawLine(ctx, this.lastX, this.lastY, this.drawingLines[i][0], this.drawingLines[i][1], color)
+        }
+        this.lastX = this.drawingLines[i][0]
+        this.lastY = this.drawingLines[i][1]
+      }
+      this.clearLabelLayers()
+    },
+    // 清空标注的图层
+    clearLabelLayers () {
+      for (let i = 1; i < this.count; i++) {
+        let c = document.getElementById('canvas' + i)
+        c.remove()
+      }
+      this.count = 1
+      this.drawingLines = []
     }
   }
 }
@@ -251,7 +357,48 @@ export default {
   }
   #contrl_panel{
     background: black;
-    height: 1000px;
+    height: 968px;
     /*margin-top: 720px;*/
+  }
+  #label_box{
+    width: 250px;
+    height: 400px;
+    position: absolute;
+    background: aliceblue;
+    top: 320px;
+    left: 1280px;
+  }
+  #classes_box{
+    width: 250px;
+    height: 320px;
+    position: absolute;
+    background: aliceblue;
+    top: 0px;
+    left: 1280px;
+  }
+  #files_box{
+    width: 300px;
+    height: 320px;
+    position: absolute;
+    background: aliceblue;
+    top: 0px;
+    left: 1535px;
+  }
+  .list-label{
+    width: 100%;
+    text-align: center;
+    background: #045e0b;
+    color: #f0f8ff;
+  }
+  table,td{
+    border-collapse: collapse;
+    border: 1px solid #000;
+    text-align: center;
+  }
+  table{
+    width: 100%;
+  }
+  td{
+    width: 33%;
   }
 </style>
