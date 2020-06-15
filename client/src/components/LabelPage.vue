@@ -30,24 +30,36 @@
 export default {
   data () {
     return {
+      // canvas最底层画布
       canvas: null,
+      // 画笔
       ctx: null,
       x: 0,
       y: 0,
       lastX: null,
       lastY: null,
+      // 标注图片对象
       image: null,
       name: 'LabelPage',
+      // 起始点
       startPoint: [],
+      // 标注点集合
       drawingLines: [],
+      // 鼠标是否在canvas内
       mouseInCanvas: false,
       canvasDiv: null,
+      // canvas点图层计数器
       count: 1,
+      // canvas label图层计数器
+      labelCount: 0,
+      // 是否能够绘画的状态
       drawSwitch: true,
+      // canvas范围rect对象
       canvasArea: null,
-      labelCounter: 0,
       colors: ['red', 'blue', 'green', 'yellow'],
+      // 该label是否标注完成
       labelCompelete: false,
+      // 弹出层默认css
       display: 'display:none',
       formItem: {
         stateList: [
@@ -67,12 +79,14 @@ export default {
       }
     }
   },
+  // 页面加载逻辑
   mounted () {
     this.initCanvas()
     window.addEventListener('click', this.mouseClick)
     this.canvasDiv = document.getElementById('canvas_div')
   },
   methods: {
+    // 界面初始化函数
     initCanvas () {
       this.canvas = document.getElementById('label_canvas')
       this.ctx = this.canvas.getContext('2d')
@@ -83,6 +97,7 @@ export default {
       this.image.src = 'http://localhost:9090/static/223.jpg'
       this.image.onload = this.pictureDisplay
     },
+    // 鼠标点击canvas函数
     mouseClick (evt) {
       if (this.drawSwitch === true && this.labelCompelete === false) {
         this.x = evt.offsetX
@@ -100,14 +115,10 @@ export default {
         newCanvas.height = this.canvas.height
         newCanvas.id = 'canvas' + this.count
         newCanvas.className = 'canvas'
-        newCanvas.style = 'position: absolute;z-index:' + this.count + ';'
+        newCanvas.style = 'position: absolute;z-index:' + (this.count + 100) + ';'
         this.canvasDiv.appendChild(newCanvas)
         let ctx = newCanvas.getContext('2d')
-        ctx.fillStyle = 'red'
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, 4, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.closePath()
+        this.drawPoint(ctx, this.x, this.y, 4)
         if (this.lastX != null && this.lastY != null) {
           this.drawLine(ctx, this.x, this.y, this.lastX, this.lastY)
         } else {
@@ -119,13 +130,16 @@ export default {
         this.count += 1
         if (this.labelCompelete) {
           this.display = ' '
+          this.updateCanvasLayers()
         }
       }
     },
+    // 图像加载完成回调函数
     pictureDisplay () {
       this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height)
       this.canvasArea = this.canvas.getBoundingClientRect()
     },
+    // 画线事件
     drawLine (ctx, x1, y1, x2, y2) {
       ctx.save()
       ctx.beginPath()
@@ -139,6 +153,7 @@ export default {
       ctx.stroke()
       ctx.restore()
     },
+    // 删除最后一个点的点击事件
     deleteLastPoint () {
       if (this.drawingLines.length !== 0) {
         this.drawingLines.pop()
@@ -156,8 +171,25 @@ export default {
         }
       }
     },
+    // 取消按钮点击事件
     cancelButtonClick () {
       this.display = 'display:none'
+    },
+    // 画点函数
+    drawPoint (ctx, x, y, r) {
+      ctx.fillStyle = 'red'
+      ctx.beginPath()
+      ctx.arc(x, y, r, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.closePath()
+    },
+    // 标注点集合遍历函数
+    continueLinesIter (item, index) {
+      console.log(item + ',' + index)
+    },
+    // 合并canvas图层函数
+    updateCanvasLayers () {
+      this.drawingLines.forEach(this.continueLinesIter)
     }
   }
 }
