@@ -198,7 +198,7 @@ export default {
           this.labelCompelete = true
         }
         let ctx = this.newCanvasLayer('canvas', 'canvas')
-        this.drawPoint(ctx, this.x, this.y, 4, 'red')
+        this.drawPoint(ctx, this.x, this.y, 3, 'red')
         if (this.lastX != null && this.lastY != null) {
           this.drawLine(ctx, this.x, this.y, this.lastX, this.lastY, 'red')
         } else {
@@ -279,7 +279,7 @@ export default {
       // this.drawingLines.forEach(this.continueLinesIter)
       let ctx = this.newCanvasLayer('label_' + this.labelCount, 'canvas')
       for (let i = 0; i < this.drawingLines.length; i++) {
-        this.drawPoint(ctx, this.drawingLines[i][0], this.drawingLines[i][1], 4, color)
+        this.drawPoint(ctx, this.drawingLines[i][0], this.drawingLines[i][1], 3, color)
         if (i !== 0) {
           this.drawLine(ctx, this.lastX, this.lastY, this.drawingLines[i][0], this.drawingLines[i][1], color)
         }
