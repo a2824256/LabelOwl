@@ -16,12 +16,24 @@ var (
 	imgs []string
 )
 
+func Cors(ctx iris.Context) {
+	ctx.Header("Access-Control-Allow-Origin", "*")
+	if ctx.Request().Method == "OPTIONS" {
+		ctx.Header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS")
+		ctx.Header("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
+		ctx.StatusCode(204)
+		return
+	}
+	ctx.Next()
+}
+
 func main() {
 	//fmt.Println("服务启动")
 	app := iris.New()
 	app.Logger().SetLevel("debug")
 	app.Use(recover.New())
 	app.Use(logger.New())
+	app.Use(Cors)
 	log.Print("服务启动")
 	//静态目录路径
 	app.StaticWeb("/static", upload_path)
@@ -34,7 +46,7 @@ func main() {
 		for _, f := range files {
 			imgs = append(imgs, f.Name())
 		}
-		ctx.JSON(iris.Map{"data": iris.Map{"images": imgs, "labels": []string{"mouth", "consil", "pp-wall"}}, "status": 1})
+		ctx.JSON(iris.Map{"data": iris.Map{"images": imgs, "labels": iris.Map{"0": "mouth", "1": "consil", "2": "pp-wall"}}, "status": 1})
 		imgs = []string{}
 	})
 	app.Run(iris.Addr(":9090"), iris.WithoutServerError(iris.ErrServerClosed))

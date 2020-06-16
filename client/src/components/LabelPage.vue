@@ -11,11 +11,10 @@
       <div id="popup_content">
         <div>
           <span id="select_label">选择label:</span>
-          <Select style="width:200px" v-model="formItem.labels" @change="changeSelection">
-            <Option v-for="item in formItem.stateList" :value="item.value" :key="item.value" name="labels">{{
-              item.label }}
-            </Option>
-          </Select>
+          <select style="width:200px" v-model="selectValue" @change="changeSelection">
+            <option v-for="item in respData.labels" :value="item" :key="item" :label="item" name="labels">
+            </option>
+          </select>
         </div>
         <span id="button_span">
           <button id="confim_button" @click="confimButtonClick">确认</button>
@@ -94,23 +93,11 @@ export default {
       labelCompelete: false,
       // 弹出层默认css
       display: 'display:none',
-      formItem: {
-        stateList: [
-          {
-            value: '0',
-            label: 'consil'
-          },
-          {
-            value: '1',
-            label: 'mouth'
-          },
-          {
-            value: '2',
-            label: 'pp-wall'
-          }
-        ]
-      },
-      selectValue: 0
+      selectValue: null,
+      respData: {
+        'labels': [],
+        'images': []
+      }
     }
   },
   // 页面加载逻辑
@@ -118,9 +105,37 @@ export default {
     this.initCanvas()
     window.addEventListener('click', this.mouseClick)
     this.canvasDiv = document.getElementById('canvas_div')
-    this.updateClassesList()
+    this.getInitData()
   },
   methods: {
+    deleteLayer (id) {
+      let layerId = 'label_' + id
+      let labelId = 'label_record_' + id
+      console.log(layerId)
+      console.log(labelId)
+      let layer = document.getElementById(layerId)
+      let label = document.getElementById(labelId)
+      console.log(layer)
+      console.log(label)
+      layer.remove()
+      label.remove()
+    },
+    findKey (obj, value, compare = (a, b) => a === b) {
+      return Object.keys(obj).find(k => compare(obj[k], value))
+    },
+    async getInitData () {
+      let url = this.$host + '/data'
+      this.$axios.get(url).then(response => {
+        if (response.data.status === 1) {
+          // this.respData = response.data.data
+          this.$set(this, 'respData', response.data.data)
+          this.selectValue = this.respData.labels[0]
+          this.updateClassesList()
+        }
+      }).catch(function (error) {
+        console.log(error)
+      })
+    },
     // 选择分类下拉框选择事件
     changeSelection (event) {
       this.selectValue = event.target.value
@@ -128,10 +143,10 @@ export default {
     // 更新分类列表
     updateClassesList () {
       let clt = document.getElementById('classes_table')
-      for (let i = 0; i < this.formItem.stateList.length; i++) {
+      for (let i = 0; i < Object.keys(this.respData.labels).length; i++) {
         let tr = document.createElement('tr')
         let td1 = document.createElement('td')
-        td1.innerText = this.formItem.stateList[i]['label']
+        td1.innerText = this.respData.labels[i]
         let td2 = document.createElement('td')
         let div = document.createElement('div')
         div.style = 'margin-left:50px;width:10px;height:10px;background:' + this.colors[i] + ';'
@@ -141,17 +156,23 @@ export default {
         clt.appendChild(tr)
       }
     },
+    updateFileList () {
+
+    },
     // 更新label列表
-    updateLabelList (classId) {
+    addNewLabel () {
       let clt = document.getElementById('label_table')
       let tr = document.createElement('tr')
       let td1 = document.createElement('td')
       td1.innerText = 'label_' + (this.labelCount + 1)
+      tr.id = 'label_record_' + (this.labelCount + 1)
       let td2 = document.createElement('td')
-      td2.innerText = this.formItem.stateList[this.selectValue]['label']
+      td2.innerText = this.selectValue
       let td3 = document.createElement('td')
       let but = document.createElement('button')
       but.innerText = '删除'
+      but.id = this.labelCount + 1
+      but.onclick = () => this.deleteLayer(but.id)
       td3.appendChild(but)
       tr.appendChild(td1)
       tr.appendChild(td2)
@@ -166,12 +187,13 @@ export default {
       this.canvas.width = 1280
       this.canvas.height = 720
       this.image = new Image()
-      this.image.src = 'http://localhost:9090/static/images/223.jpg'
+      this.image.src = this.$host + '/static/images/223.jpg'
       this.image.onload = this.pictureDisplay
     },
+    // 确认按钮
     confimButtonClick () {
-      this.updateLabelList()
-      this.updateCanvasLayers(this.colors[this.selectValue])
+      this.addNewLabel()
+      this.updateCanvasLayers(this.colors[this.findKey(this.respData.labels, this.selectValue)])
       this.display = 'display:none'
       this.labelCompelete = false
       this.lastX = null
@@ -180,7 +202,6 @@ export default {
     // 鼠标点击canvas函数
     mouseClick (evt) {
       if (this.drawSwitch === true && this.labelCompelete === false) {
-        console.log('????')
         this.x = evt.offsetX
         this.y = evt.offsetY
         if (evt.path[0].className !== 'canvas') {
@@ -197,7 +218,7 @@ export default {
           this.y = this.startPoint[1]
           this.labelCompelete = true
         }
-        let ctx = this.newCanvasLayer('canvas', 'canvas')
+        let ctx = this.newCanvasLayer('canvas', 'canvas', this.count)
         this.drawPoint(ctx, this.x, this.y, 3, 'red')
         if (this.lastX != null && this.lastY != null) {
           this.drawLine(ctx, this.x, this.y, this.lastX, this.lastY, 'red')
@@ -214,11 +235,11 @@ export default {
       }
     },
     // 创建新图层
-    newCanvasLayer (id, className) {
+    newCanvasLayer (id, className, number) {
       let newCanvas = document.createElement('canvas')
       newCanvas.width = this.canvas.width
       newCanvas.height = this.canvas.height
-      newCanvas.id = id + this.count
+      newCanvas.id = id + number
       newCanvas.className = className
       newCanvas.style = 'position: absolute;z-index:' + (this.count + 100) + ';'
       this.canvasDiv.appendChild(newCanvas)
@@ -276,8 +297,7 @@ export default {
     // 合并canvas图层函数
     updateCanvasLayers (color) {
       this.labelCount += 1
-      // this.drawingLines.forEach(this.continueLinesIter)
-      let ctx = this.newCanvasLayer('label_' + this.labelCount, 'canvas')
+      let ctx = this.newCanvasLayer('label_', 'canvas', this.labelCount)
       for (let i = 0; i < this.drawingLines.length; i++) {
         this.drawPoint(ctx, this.drawingLines[i][0], this.drawingLines[i][1], 3, color)
         if (i !== 0) {
