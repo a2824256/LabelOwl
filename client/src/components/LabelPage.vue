@@ -46,11 +46,11 @@
     <div id="files_box">
       <div class="list-label">文件列表</div>
       <table>
-        <table class="list-table" cellspacing="0" cellpadding="1" border="1px">
+        <table id="list-table" cellspacing="0" cellpadding="1" border="1px">
           <tr>
             <td>文件名</td>
             <td>状态</td>
-            <td>标注者</td>
+            <td>操作</td>
           </tr>
         </table>
       </table>
@@ -96,7 +96,8 @@ export default {
       selectValue: null,
       respData: {
         'labels': [],
-        'images': []
+        'images': [],
+        'img_status': []
       }
     }
   },
@@ -105,9 +106,28 @@ export default {
     this.initCanvas()
     window.addEventListener('click', this.mouseClick)
     this.canvasDiv = document.getElementById('canvas_div')
+    // get请求获取初始数据
     this.getInitData()
   },
   methods: {
+    changeImage (file) {
+      let url = this.$host + '/static/images/' + file
+      this.canvas.width = 1280
+      this.canvas.height = 720
+      this.image = new Image()
+      this.image.src = url
+      this.image.onload = this.pictureDisplay
+      this.clearLabelLayers()
+      this.clearAllLayers()
+      let tb = document.getElementById('label_table')
+      let rowNum = tb.rows.length
+      for (let i = 1; i < rowNum; i++) {
+        tb.deleteRow(i)
+        rowNum = rowNum - 1
+        i = i - 1
+      }
+    },
+    // 删除已标注label
     deleteLayer (id) {
       let layerId = 'label_' + id
       let labelId = 'label_record_' + id
@@ -120,17 +140,20 @@ export default {
       layer.remove()
       label.remove()
     },
+    // 根据value查找对应数组里面的key
     findKey (obj, value, compare = (a, b) => a === b) {
       return Object.keys(obj).find(k => compare(obj[k], value))
     },
+    // 获取初始化数据
     async getInitData () {
       let url = this.$host + '/data'
       this.$axios.get(url).then(response => {
         if (response.data.status === 1) {
-          // this.respData = response.data.data
           this.$set(this, 'respData', response.data.data)
           this.selectValue = this.respData.labels[0]
+          console.log(this.respData)
           this.updateClassesList()
+          this.updateFileList()
         }
       }).catch(function (error) {
         console.log(error)
@@ -156,8 +179,32 @@ export default {
         clt.appendChild(tr)
       }
     },
+    // 更新文件列表
     updateFileList () {
+      let clt = document.getElementById('list-table')
 
+      for (let i = 0; i < Object.keys(this.respData.images).length; i++) {
+        let tr = document.createElement('tr')
+        let td1 = document.createElement('td')
+        td1.innerText = this.respData.images[i]
+        let td2 = document.createElement('td')
+        if (this.respData['img_status'][i] === '') {
+          td2.innerText = '未标注'
+          td2.style = 'color:red;'
+        } else {
+          td2.innerText = this.respData['img_status'][i] + '标注中'
+          td2.style = ''
+        }
+        let td3 = document.createElement('td')
+        let but = document.createElement('button')
+        but.innerText = '打开'
+        but.onclick = () => this.changeImage(this.respData.images[i])
+        td3.appendChild(but)
+        tr.appendChild(td1)
+        tr.appendChild(td2)
+        tr.appendChild(td3)
+        clt.appendChild(tr)
+      }
     },
     // 更新label列表
     addNewLabel () {
@@ -316,6 +363,14 @@ export default {
       }
       this.count = 1
       this.drawingLines = []
+    },
+    clearAllLayers () {
+      for (let i = 1; i <= this.labelCount; i++) {
+        let c = document.getElementById('label_' + i)
+        c.remove()
+      }
+      this.labelCount = 0
+      this.drawingLines = []
     }
   }
 }
@@ -398,11 +453,12 @@ export default {
   }
   #files_box{
     width: 300px;
-    height: 320px;
+    height: 720px;
     position: absolute;
     background: aliceblue;
     top: 0px;
     left: 1535px;
+    overFlow-x:auto;
   }
   .list-label{
     width: 100%;

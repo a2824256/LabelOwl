@@ -46,7 +46,7 @@ func main() {
 		for _, f := range files {
 			imgs = append(imgs, f.Name())
 		}
-		ctx.JSON(iris.Map{"data": iris.Map{"images": imgs, "labels": iris.Map{"0": "mouth", "1": "consil", "2": "pp-wall"}}, "status": 1})
+		ctx.JSON(iris.Map{"data": iris.Map{"images": imgs, "labels": iris.Map{"0": "mouth", "1": "consil", "2": "pp-wall"}, "img_status": []string{"测试员", ""}}, "status": 1})
 		imgs = []string{}
 	})
 	app.Run(iris.Addr(":9090"), iris.WithoutServerError(iris.ErrServerClosed))
