@@ -111,7 +111,7 @@ export default {
   },
   methods: {
     changeImage (file) {
-      let url = this.$host + '/static/images/' + file
+      let url = this.$host + '?pid=' + file
       this.canvas.width = 1280
       this.canvas.height = 720
       this.image = new Image()
@@ -234,7 +234,7 @@ export default {
       this.canvas.width = 1280
       this.canvas.height = 720
       this.image = new Image()
-      this.image.src = this.$host + '/static/images/223.jpg'
+      this.image.src = this.$host + '?pid=0'
       this.image.onload = this.pictureDisplay
     },
     // 确认按钮

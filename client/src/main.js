@@ -11,6 +11,8 @@ Vue.use(IconsPlugin)
 // 定义全局变量
 Vue.prototype.$axios = axios
 Vue.prototype.$host = globalConfig.host
+Vue.prototype.$ws = globalConfig.ws
+Vue.prototype.global = globalConfig
 Vue.config.productionTip = false
 /* eslint-disable no-new */
 new Vue({

@@ -1,5 +1,9 @@
-const host = 'http://localhost:9090'
+const host = 'http://localhost:2347'
 
 export default{
-  host
+  host,
+  ws: {},
+  setWs: function (newWs) {
+    this.ws = newWs
+  }
 }
