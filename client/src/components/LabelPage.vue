@@ -146,10 +146,10 @@ export default {
     },
     // 获取初始化数据
     async getInitData () {
-      let url = this.$host + '/data'
+      let url = this.$host + '?type=classes'
       this.$axios.get(url).then(response => {
         if (response.data.status === 1) {
-          this.$set(this, 'respData', response.data.data)
+          this.$set(this, 'respData', response.data)
           this.selectValue = this.respData.labels[0]
           console.log(this.respData)
           this.updateClassesList()
@@ -182,7 +182,7 @@ export default {
     // 更新文件列表
     updateFileList () {
       let clt = document.getElementById('list-table')
-
+      console.log(this.respData.images)
       for (let i = 0; i < Object.keys(this.respData.images).length; i++) {
         let tr = document.createElement('tr')
         let td1 = document.createElement('td')
@@ -234,7 +234,7 @@ export default {
       this.canvas.width = 1280
       this.canvas.height = 720
       this.image = new Image()
-      this.image.src = this.$host + '?pid=0'
+      this.image.src = this.$host + '?pid=0.jpg'
       this.image.onload = this.pictureDisplay
     },
     // 确认按钮
