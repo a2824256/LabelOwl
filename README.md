@@ -20,7 +20,7 @@
 ## 已知bug
 
 ## TODO- LIST
-- 隐藏label图层功能
+- ~隐藏label图层功能~
 
 ## 当前运行界面
 ![界面](sc.png)
