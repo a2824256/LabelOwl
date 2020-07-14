@@ -3,7 +3,7 @@
 
 ## 系统结构
 - 前端: vue.js
-- 服务端: golang + iris
+- 服务端: golang + iris or PHP + workerman
 
 ## 开发环境
 - node.js 14.4.0
